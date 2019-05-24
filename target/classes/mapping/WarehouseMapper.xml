@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.WarehouseMgrMapper">
+    <select id="getInWarehouse" resultType="java.lang.Long">
+        SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=0 AND date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+
+    <select id="getOutWarehouse" resultType="java.lang.Long">
+        SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=1 AND date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+    <select id="getInWarehouseThisYear" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseThisYear" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=1 GROUP BY `date`
+    </select>
+    <select id="getInWarehouseLastYear" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseLastYear" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=1 GROUP BY `date`
+    </select>
+    <select id="getInWarehouseByPro" resultType="java.lang.Long">
+		SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+			LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=0 AND oa.address_prov=#{param1} AND date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+    <select id="getOutWarehouseByPro" resultType="java.lang.Long">
+        SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=1 AND oa.address_prov=#{param1} AND date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+    <select id="getInWarehouseThisYearByPro" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+							LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_prov=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseThisYearByPro" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_prov=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=1 GROUP BY `date`
+    </select>
+    <select id="getInWarehouseLastYearByPro" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+			LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+		oa.address_prov=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseLastYearByPro" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_prov=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=1 GROUP BY `date`
+    </select>
+    <select id="getInWarehouseByCity" resultType="java.lang.Long">
+        SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+			LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=0 AND oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+    <select id="getOutWarehouseByCity" resultType="java.lang.Long">
+        SELECT SUM(od.dic_code) AS weight FROM orchard_warehouse ow
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        ow.wh_delete_flag=1 AND wh_type=1 AND oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')
+    </select>
+    <select id="getInWarehouseThisYearByCity" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseThisYearByCity" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m')AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND
+        ow.wh_delete_flag=1 AND wh_type=1 GROUP BY `date`
+    </select>
+    <select id="getInWarehouseLastYearByCity" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m')AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getOutWarehouseLastYearByCity" resultType="java.util.Map">
+        SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `date` FROM orchard_warehouse ow
+        LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+        LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+        WHERE
+        <if test="variety !=null and variety !='' " >
+            oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_city=#{param1} AND
+        date_format(wh_cret_time,'%Y')=date_format(NOW(),'%Y')-1 AND
+        ow.wh_delete_flag=1 AND wh_type=0 GROUP BY `date`
+    </select>
+    <select id="getStock" resultType="java.util.Map">
+      SELECT IFNULL(a.cropName,'') AS cropName, IFNULL((aweight-bweight),0) AS weight FROM
+      (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS aweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_crop oc ON ow.wh_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+            WHERE ow.wh_type=0 AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+            GROUP BY oc.crop_name ORDER BY aweight DESC ) a
+       LEFT JOIN (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS bweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_crop oc ON ow.wh_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+       WHERE ow.wh_type=1 AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+      GROUP BY oc.crop_name ORDER BY bweight DESC) b  ON a.cropName=b.cropName
+    </select>
+    <select id="getStockByPro" resultType="java.util.Map">
+        SELECT IFNULL(a.cropName,'') AS cropName, IFNULL((aweight-bweight),0) AS weight FROM
+      (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS aweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+            WHERE ow.wh_type=0  AND oa.address_prov=#{param1} AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+            GROUP BY oc.crop_name ORDER BY aweight DESC ) a
+       LEFT JOIN (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS bweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+       WHERE ow.wh_type=1  AND oa.address_prov=#{param1} AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+      GROUP BY oc.crop_name ORDER BY bweight DESC) b  ON a.cropName=b.cropName
+    </select>
+    <select id="getStockByCity" resultType="java.util.Map">
+          SELECT IFNULL(a.cropName,'') AS cropName, IFNULL((aweight-bweight),0) AS weight FROM
+      (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS aweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+            WHERE ow.wh_type=0  AND oa.address_city=#{param1} AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+            GROUP BY oc.crop_name ORDER BY aweight DESC ) a
+       LEFT JOIN (
+            SELECT oc.crop_name AS cropName,
+            SUM(od.dic_code) AS bweight FROM orchard_warehouse ow
+            LEFT JOIN orchard_plant op ON ow.wh_plant_id=op.plant_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id
+            LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
+       WHERE ow.wh_type=1  AND oa.address_city=#{param1} AND  YEAR(ow.wh_cret_time)=YEAR(NOW())
+      GROUP BY oc.crop_name ORDER BY bweight DESC) b  ON a.cropName=b.cropName
+    </select>
+</mapper>

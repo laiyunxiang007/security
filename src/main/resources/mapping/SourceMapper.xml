@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.SourceMapper">
+    <select id="getAllOriginCity" resultType="java.util.Map">
+        SELECT orisech_city AS city,
+        orisech_prov AS prov,
+        COUNT(1) AS count,
+        orisech_gislong AS gislong,
+        orisech_gislate AS gislate
+        FROM orchard_source_track
+        <where>
+            <if test="variety !=null and variety !=''">
+                orisech_cropname=#{variety}
+            </if>
+        </where>
+        GROUP BY city,prov ORDER BY count desc LIMIT 20
+    </select>
+    <select id="getAllOriginCount" resultType="java.util.Map">
+        	select count(*) count,month(orisech_create_time) osmonth
+			from orchard_source_track
+        <where>
+            <if test="variety !=null and variety !=''">
+                orisech_cropname=#{variety}
+            </if>
+        </where>
+			group by month(orisech_create_time) order by osmonth asc
+    </select>
+    <select id="getAllOriginAddress" resultType="java.util.Map">
+        SELECT orisech_prov AS prov,orisech_city AS city,orisech_town AS town,orisech_village AS village,orisech_addr
+        as addr,
+        orisech_create_time AS date,
+        date_format( orisech_create_time, '%H:%i' ) AS 'time',
+        orisech_cropname AS cropName
+        FROM orchard_source_track
+        <where>
+        <if test="date !=null and date !=''">
+            orisech_create_time &lt;= #{date}
+        </if>
+            <if test="variety !=null and variety !=''">
+                and orisech_cropname like CONCAT('%',#{variety},'%')
+            </if>
+        </where>
+          ORDER BY orisech_create_time DESC
+    </select>
+    <select id="getOriginCityByPro" resultType="java.util.Map">
+        SELECT ifnull(orisech_city,'') AS city,
+        COUNT(1) AS count,
+        orisech_gislong AS gislong,
+        orisech_gislate AS gislate
+        FROM orchard_source_track
+        <where>
+            <if test="variety !=null and variety !=''">
+                orisech_cropname=#{variety} and
+            </if>
+            orisech_prov =#{param1}
+        </where>
+        GROUP BY orisech_city ORDER BY count desc LIMIT 20
+    </select>
+    <select id="getOriginCityByCity" resultType="java.util.Map">
+        SELECT ifnull(orisech_city,'') AS city,
+        COUNT(1) AS count,
+        orisech_gislong AS gislong,
+        orisech_gislate AS gislate
+        FROM orchard_source_track
+        <where>
+            <if test="variety !=null and variety !=''">
+                orisech_cropname=#{variety} and
+            </if>
+            orisech_city =#{param1}
+        </where>
+        GROUP BY orisech_city ORDER BY count desc LIMIT 20
+    </select>
+</mapper>

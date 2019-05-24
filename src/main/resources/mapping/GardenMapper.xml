@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.GardenMapper">
+    <select id="getGardenDetail" resultType="java.util.Map">
+    SELECT
+        og.garden_name,
+        ou.user_real_name,
+        oa.address_info,
+         IFNULL(ou.user_head,'') AS head,
+        SUM(op.plant_area) AS area,
+        (SELECT count(1) FROM  orchard_user ou1   WHERE ou1.user_role=1 AND ou1.user_garden_id=og.garden_id) AS farmUser,
+        COUNT(oc.crop_name) AS cropCount,
+        oa.address_gislatd AS gislatd,
+		oa.address_gislong AS gislong,
+		ou.user_mobile AS phone
+        FROM orchard_garden og
+        LEFT JOIN orchard_user ou ON og.garden_user_id=ou.user_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+    WHERE og.garden_approve_state='PS' AND og.garden_id=#{param1}
+    ORDER BY op.plant_area LIMIT 0,1
+    </select>
+    <select id="getWindSpeeds" resultType="java.util.Map">
+        SELECT
+            AVG(fmbdata_windspd) fmbdata_windspd,
+            AVG(fmbdata_rain) fmbdata_rain,
+            AVG(fmbdata_winddir) fmbdata_winddir,
+            AVG(fmbdata_soiltemp) fmbdata_soiltemp,
+            AVG(fmbdata_soilmture) fmbdata_soilmture,
+            DATE_FORMAT(fmbdata_txtime,'%Y-%m-%d') days FROM fmb_data fd
+            LEFT JOIN orchard_fmb of ON fd.fmb_id=of.fmb_id
+            LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+            LEFT JOIN orchard_garden og ON og.garden_address_id=oa.address_id
+        WHERE og.garden_id=#{param1} AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= date(fmbdata_txtime)
+        AND fd.fmbdata_status='A'
+        group by DATE_FORMAT(fmbdata_txtime,'%Y-%m-%d')
+    </select>
+    <select id="getFm1Data" resultType="java.util.Map">
+        SELECT
+        AVG(flddata_humid) flddata_humid,
+        AVG(flddata_temp) flddata_temp,
+        AVG(flddata_sunlux) flddata_sunlux,
+        AVG(flddata_pa) flddata_pa,
+        DATE_FORMAT(flddata_txtime,'%Y-%m-%d') days FROM fielddata fd
+        LEFT JOIN orchard_fielddstation of ON fd.fldstn_id=of.fldstn_id
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+        LEFT JOIN orchard_garden og ON og.garden_address_id=oa.address_id
+        WHERE og.garden_id=#{param1} AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= date(flddata_txtime)
+        AND fd.flddata_status='A'
+        group by DATE_FORMAT(flddata_txtime,'%Y-%m-%d')
+    </select>
+    <select id="getCropAreaTime" resultType="java.util.Map">
+      SELECT oc.crop_name AS cropName,SUM(op.plant_area) AS area,YEAR(op.plant_date) AS `year` FROM orchard_garden og
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON op.plant_gb_id=ogb.gb_id
+        LEFT JOIN orchard_crop oc ON plant_crop_id=oc.crop_id
+        WHERE og.garden_id=#{Id}  AND YEAR(op.plant_date)=Year(now())
+         GROUP BY cropName
+    </select>
+
+</mapper>

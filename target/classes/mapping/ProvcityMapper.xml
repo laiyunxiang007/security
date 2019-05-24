@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.ProvcityMapper">
+  <select id="getAllProvcity" resultType="java.util.Map">
+      SELECT prov_name AS provName, area FROM
+         (
+            SELECT prov_name FROM provcity  GROUP BY prov_name
+         ) a
+            LEFT JOIN
+         (
+         SELECT oa.address_prov, SUM(op.plant_area) AS area FROM orchard_address oa
+         LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+         LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+         WHERE
+         <if test="variety !=null and variety !='' ">
+             oc.crop_name =#{variety}  AND
+         </if>
+      oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
+         GROUP BY address_prov
+         ) b
+      ON a.prov_name=b.address_prov
+  </select>
+  <select id="getAllCity" resultType="HashMap">
+     SELECT prov_city_name AS cityName,IFNULL(area,0) AS area FROM
+         (
+            SELECT prov_city_name FROM provcity  WHERE prov_name=#{param1} GROUP BY prov_city_name
+         ) a
+         LEFT JOIN
+         (
+            SELECT oa.address_city, SUM(op.plant_area) AS area FROM orchard_address oa
+            LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            WHERE
+            <if test="variety!=null and variety !=''">
+                oc.crop_name =#{variety} AND
+            </if>
+      oa.address_type='B' AND og.garden_approve_state='PS'AND oc.dic_delete_flag=0
+      AND op.plant_delete_flag=0 GROUP BY address_city
+            ) b
+     ON a.prov_city_name=b.address_city
+  </select>
+    <select id="getCityArea" resultType="java.util.Map">
+        SELECT prov_county_name AS countyName,IFNULL(area,0) AS area FROM
+        (
+        SELECT prov_county_name FROM provcity WHERE prov_city_name=#{param1} GROUP BY prov_county_name
+        ) a
+        LEFT JOIN
+        (
+        SELECT oa.address_county, SUM(op.plant_area) AS area FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        oa.address_city= #{param1} and
+        <if test="variety !=null and variety != ''">
+            oc.crop_name =#{variety} AND
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND oc.dic_delete_flag=0
+        AND op.plant_delete_flag=0 GROUP BY address_county
+        ) b
+        ON a.prov_county_name=b.address_county
+  </select>
+
+    <select id="getCityAggregateData" resultType="HashMap">
+        SELECT count(og.garden_id) AS gardenCount,
+        SUM(op.plant_area) AS area,
+        count(distinct oc.crop_name) AS cropCount FROM orchard_address oa
+            LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety">
+        oc.crop_name =#{variety}  AND
+        </if>
+        oa.address_city= #{param1} AND oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0
+        AND oc.dic_delete_flag=0
+    </select>
+
+    <select id="getAllCityAggregateData" resultType="HashMap">
+        SELECT SUM(gardenCount) AS gardenCount,
+        SUM(area) AS area,
+        SUM(cropCount) AS cropCount FROM
+        (
+        SELECT prov_city_name,gardenCount, area, cropCount FROM
+         (
+                SELECT prov_city_name AS prov_city_name FROM provcity p
+                WHERE prov_name=#{param1} GROUP BY prov_city_name
+         ) a
+      LEFT JOIN
+         (
+                SELECT
+                 oa.address_city AS address_city , count(og.garden_id) AS gardenCount,
+                 SUM(op.plant_area) AS area,
+                  count(distinct oc.crop_name) AS cropCount FROM orchard_address oa
+                LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+                WHERE
+                <if test="variety !=null and variety !=''">
+                    oc.crop_name=#{variety} and
+                </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0
+        AND oc.dic_delete_flag=0
+                GROUP BY address_city
+         ) b
+        ON a.prov_city_name=b.address_city
+    ) c
+    </select>
+    <select id="getNationWideData" resultType="HashMap">
+        SELECT SUM(gardenCount)  AS gardenCount,
+        SUM(area)  AS area,
+         SUM(cropCount) AS cropCount FROM
+        (
+        SELECT  gardenCount, area,cropCount FROM
+        (
+        SELECT prov_name FROM provcity  GROUP BY prov_name
+        ) a
+        LEFT JOIN
+        (
+        SELECT oa.address_prov, count(og.garden_id) AS gardenCount, SUM(op.plant_area) AS area,
+        count(distinct oc.crop_name) AS cropCount  FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0
+        AND oc.dic_delete_flag=0
+        GROUP BY address_prov
+        ) b
+        ON a.prov_name=b.address_prov
+        ) c
+    </select>
+    <select id="getNationWideTreeAge" resultType="java.util.Map">
+        SELECT SUM(op.plant_area)
+        AS area,'3-4年' AS age
+        FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
+        op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=3 AND year(NOW())-year(op.plant_date)&lt;5
+        AND oc.dic_delete_flag=0
+        union all
+        SELECT  SUM(op.plant_area)
+        AS area,'5-8年' AS age
+        FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
+        op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=5 AND year(NOW())-year(op.plant_date)&lt;9
+        AND oc.dic_delete_flag=0
+        union all
+        SELECT  SUM(op.plant_area)
+        AS area,'9-20年' AS age
+        FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
+        op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=9 AND year(NOW())-year(op.plant_date)&lt;20
+        AND oc.dic_delete_flag=0
+        union all
+        SELECT SUM(op.plant_area)
+        AS area,'20年以上' AS age
+        FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
+        op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=20 AND oc.dic_delete_flag=0
+    </select>
+    <select id="getProvTreeAge" resultType="HashMap">
+        SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'3-4年' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;3 AND year(NOW())-year(op.plant_date)&lt;5 AND oa.address_prov=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'5-8年' AS age
+FROM  orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=5 AND year(NOW())-year(op.plant_date)&lt;9 AND oa.address_prov=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'9-20年' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=9 AND year(NOW())-year(op.plant_date)&lt;20 AND oa.address_prov=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'20年以上' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+ WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=20 AND oa.address_prov=#{param1} AND oc.dic_delete_flag=0
+    </select>
+    <select id="getCityTreeAge" resultType="HashMap">
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'3-4年' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;3 AND year(NOW())-year(op.plant_date)&lt;5 AND oa.address_city=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'5-8年' AS age
+FROM  orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=5 AND year(NOW())-year(op.plant_date)&lt;9 AND oa.address_city=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'9-20年' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=9 AND year(NOW())-year(op.plant_date)&lt;20 AND oa.address_city=#{param1}
+        AND oc.dic_delete_flag=0
+union all
+SELECT (CASE
+        WHEN SUM(op.plant_area) &lt;1000
+        THEN CONCAT(SUM(op.plant_area),'亩')
+        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
+        WHEN SUM(op.plant_area) &gt;=10000
+        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
+        END
+        ) AS area,'20年以上' AS age
+FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+ WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=20 AND oc.dic_delete_flag=0 AND
+        oa.address_city=#{param1}
+    </select>
+    <select id="getNationRanking" resultType="HashMap">
+SELECT og.garden_name AS gardenName,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+ WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0
+        AND oc.dic_delete_flag=0 GROUP BY og.garden_id ORDER BY area DESC
+    </select>
+    <select id="getProvRanking" resultType="HashMap">
+        SELECT og.garden_name AS gardenName,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0
+        and oa.address_prov=#{param1} AND oc.dic_delete_flag=0 GROUP BY og.garden_id ORDER BY area DESC
+    </select>
+    <select id="getCityRanking" resultType="HashMap">
+        SELECT og.garden_name AS gardenName,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0
+        and oa.address_city=#{param1} AND oc.dic_delete_flag=0 GROUP BY og.garden_id ORDER BY area DESC
+    </select>
+    <select id="getNationTypeArea" resultType="HashMap">
+        SELECT oc.crop_name AS cropName,SUM(op.plant_area) AS area FROM orchard_address oa
+            LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'
+        AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0 GROUP BY cropName
+    </select>
+    <select id="getProvTypeArea" resultType="HashMap">
+        SELECT oc.crop_name AS cropName,SUM(op.plant_area) AS area FROM orchard_address oa
+            LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0
+        AND oa.address_prov=#{param1} AND oc.dic_delete_flag=0 GROUP BY cropName
+    </select>
+    <select id="getCityTypeArea" resultType="HashMap">
+        SELECT oc.crop_name AS cropName,SUM(op.plant_area) AS area FROM orchard_address oa
+            LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 AND
+        oa.address_city=#{param1} AND oc.dic_delete_flag=0 GROUP BY cropName
+    </select>
+    <select id="getNationLevel" resultType="HashMap">
+        SELECT od.dic_val AS type,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og
+        ON
+        oa.address_id=og.garden_address_id
+            LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+            LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+						LEFT JOIN orchard_dictionary od ON oc.crop_type=od.dic_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
+      GROUP BY type
+    </select>
+    <select id="getProvLevel" resultType="HashMap">
+        SELECT od.dic_val AS type,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og
+        ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_dictionary od ON oc.crop_type=od.dic_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
+        AND oa.address_prov=#{param1}
+        GROUP BY type
+    </select>
+    <select id="getCityLevel" resultType="HashMap">
+        SELECT od.dic_val AS `type`,SUM(op.plant_area) AS area FROM orchard_address oa LEFT JOIN orchard_garden og
+        ON
+        oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        LEFT JOIN orchard_dictionary od ON oc.crop_type=od.dic_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
+        AND oa.address_city=#{param1}
+        GROUP BY od.dic_type_code
+    </select>
+</mapper>

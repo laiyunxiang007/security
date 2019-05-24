@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.PluckMapper">
+    <select id="getPickRanking" resultType="java.util.Map">
+        SELECT oc.crop_name AS cropName,SUM(op.pluck_weight) AS weight FROM orchard_pluck op
+            LEFT JOIN orchard_plant opl ON op.plant_id=opl.plant_id
+            LEFT JOIN orchard_crop oc ON opl.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_garden og ON op.pluck_garden_id=og.garden_id
+            LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
+        WHERE YEAR(op.pluck_cret_time)=YEAR(NOW()) AND crop_name IS NOT NULL
+        GROUP BY oc.crop_name ORDER BY weight DESC
+    </select>
+    <select id="getPickRankingbyPro" resultType="java.util.Map">
+        SELECT oc.crop_name AS cropName,SUM(op.pluck_weight) AS weight FROM orchard_pluck op
+            LEFT JOIN orchard_plant opl ON op.plant_id=opl.plant_id
+            LEFT JOIN orchard_crop oc ON opl.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_garden og ON op.pluck_garden_id=og.garden_id
+            LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
+        WHERE YEAR(op.pluck_cret_time)=YEAR(NOW()) AND oa.address_prov=#{param1} AND crop_name IS NOT NULL
+        GROUP BY cropName ORDER BY weight DESC
+    </select>
+    <select id="getPickRankingbyCity" resultType="java.util.Map">
+        SELECT oc.crop_name AS cropName,SUM(op.pluck_weight) AS weight FROM orchard_pluck op
+            LEFT JOIN orchard_plant opl ON op.plant_id=opl.plant_id
+            LEFT JOIN orchard_crop oc ON opl.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_garden og ON op.pluck_garden_id=og.garden_id
+            LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
+        WHERE YEAR(op.pluck_cret_time)=YEAR(NOW()) AND oa.address_city=#{param1} AND crop_name IS NOT NULL
+        GROUP BY oc.crop_name ORDER BY weight DESC
+    </select>
+</mapper>

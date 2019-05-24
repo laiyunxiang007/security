@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yf.garden.bs.dao.EquipmentMapper">
+    <select id="getEquipment" resultType="java.util.Map">
+        SELECT '全景摄像头' AS cameraName ,count(1) AS count  FROM orchard_em oe
+        LEFT JOIN orchard_address oa ON oe.address_id=oa.address_id
+        WHERE em_status=1  
+        UNION ALL
+        SELECT 
+        (CASE
+        WHEN camera_type='A' THEN
+            '普通摄像头'
+            WHEN camera_type='B' THEN
+            '云台摄像头'
+        ELSE
+            'AI智能摄像头'
+        END) , IFNULL(count(1),0) FROM orchard_camera oc
+        LEFT JOIN orchard_address oa ON oc.address_id=oa.address_id 
+        WHERE camera_status='A'   GROUP BY camera_type
+        UNION ALL
+        SELECT '监控FM1',count(1) FROM orchard_fmb of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id 
+        WHERE fmb_status='A'  
+        UNION ALL
+        SELECT '监控FM2',count(1) FROM orchard_fielddstation of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id  
+        WHERE fldstn_status='A'  
+    </select>
+    <select id="getEquipmentByPro" resultType="java.util.Map">
+        SELECT '全景摄像头' AS cameraName ,count(1) AS count  FROM orchard_em oe
+        LEFT JOIN orchard_address oa ON oe.address_id=oa.address_id
+        WHERE em_status=1 AND oa.address_prov=#{param1}
+        UNION ALL
+        SELECT 
+        (CASE 
+            WHEN camera_type='A' THEN
+                '普通摄像头'
+                WHEN camera_type='B' THEN
+                '云台摄像头'
+            ELSE
+                'AI智能摄像头'
+        END), IFNULL(count(1),0) FROM orchard_camera oc 
+        LEFT JOIN orchard_address oa ON oc.address_id=oa.address_id 
+        WHERE camera_status='A' AND oa.address_prov=#{param1} GROUP BY camera_type
+        UNION ALL
+        SELECT '监控FM1',count(1) FROM orchard_fmb of 
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id 
+        WHERE fmb_status='A' AND oa.address_prov=#{param1}
+        UNION ALL
+        SELECT '监控FM2',count(1) FROM orchard_fielddstation of 
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id  
+        WHERE fldstn_status='A' AND oa.address_prov=#{param1}
+    </select>
+    <select id="getEquipmentByCity" resultType="java.util.Map">
+        SELECT '全景摄像头' AS cameraName ,count(1) AS count  FROM orchard_em oe
+        LEFT JOIN orchard_address oa ON oe.address_id=oa.address_id
+        WHERE em_status=1 AND oa.address_city=#{param1}
+        UNION ALL
+        SELECT
+        (CASE
+            WHEN camera_type='A' THEN
+                '普通摄像头'
+                WHEN camera_type='B' THEN
+                '云台摄像头'
+            ELSE
+                'AI智能摄像头'
+        END), IFNULL(count(1),0) FROM orchard_camera oc
+        LEFT JOIN orchard_address oa ON oc.address_id=oa.address_id
+        WHERE camera_status='A' AND oa.address_city=#{param1} GROUP BY camera_type
+        UNION ALL
+        SELECT '监控FM1',count(1) FROM orchard_fmb of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+        WHERE fmb_status='A' AND oa.address_city=#{param1}
+        UNION ALL
+        SELECT '监控FM2',count(1) FROM orchard_fielddstation of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+        WHERE fldstn_status='A' AND oa.address_city=#{param1}
+    </select>
+    <select id="getEquipmentCount" resultType="java.lang.Integer">
+    SELECT SUM(a.count) FROM (
+    SELECT '全景摄像头' AS cameraName ,count(1) AS count  FROM orchard_em oe
+        LEFT JOIN orchard_address oa ON oe.address_id=oa.address_id
+				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        WHERE em_status=1 AND og.garden_id=1
+        UNION ALL
+        SELECT
+        (CASE
+        WHEN camera_type='A' THEN
+            '普通摄像头'
+            WHEN camera_type='B' THEN
+            '云台摄像头'
+        ELSE
+            'AI智能摄像头'
+        END) , IFNULL(count(1),0) FROM orchard_camera oc
+        LEFT JOIN orchard_address oa ON oc.address_id=oa.address_id
+				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        WHERE camera_status='A' AND og.garden_id=1
+				GROUP BY camera_type
+        UNION ALL
+        SELECT '监控FM1',count(1) FROM orchard_fmb of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        WHERE fmb_status='A' AND  og.garden_id=1
+        UNION ALL
+        SELECT '监控FM2',count(1) FROM orchard_fielddstation of
+        LEFT JOIN orchard_address oa ON of.address_id=oa.address_id
+				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        WHERE fldstn_status='A' AND og.garden_id=1 ) a
+    </select>
+</mapper>
