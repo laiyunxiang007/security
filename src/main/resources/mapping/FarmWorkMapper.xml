@@ -3,114 +3,79 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yf.garden.bs.dao.FarmWorkMapper">
     <select id="getAllFertilize" resultType="java.util.Map">
-        SELECT SUM(od.dosage_weight) AS weight,od.dosage_name AS dosageName FROM orchard_address oa LEFT JOIN
-        orchard_garden og ON oa.address_id=og.garden_address_id
-                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-				LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-				LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
-
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-				AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY dosageName
+        DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY cropName
     </select>
     <select id="getAllFertilizeByMouth" resultType="java.util.Map">
-        SELECT SUM(od.dosage_weight) AS weight,DATE_FORMAT(ofw.farm_start_time,'%m') AS mouth ,od.dosage_name AS
-        `NAME` FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
-                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-				LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-				LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight, DATE_FORMAT(opk.pluck_start_time,'%m') AS mouth
+        FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-				AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY mouth,`NAME` ORDER BY mouth ASC
+        DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY mouth,cropName ORDER BY mouth ASC
     </select>
     <select id="getProvFertilize" resultType="java.util.Map">
-      	 SELECT SUM(od.dosage_weight) AS weight,
-				oa.address_prov AS prov,ofw.farm_jtype AS jtype FROM orchard_address oa
-				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
-                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-				LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-				LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
-
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        oa.address_prov=#{param1} AND DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-				AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY ofw.farm_jtype,prov,ofw.farm_jtype
+        oa.address_prov=#{param1} AND DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY cropName
     </select>
     <select id="getProvFertilizeByMouth" resultType="java.util.Map">
-        SELECT SUM(od.dosage_weight) AS weight,
-        DATE_FORMAT(ofw.farm_start_time,'%m') AS mouth,oa.address_prov AS prov,od.dosage_name AS `NAME` FROM
-        orchard_address oa
-                LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
-                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-				LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-				LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight, DATE_FORMAT(opk.pluck_start_time,'%m') AS mouth
+        FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        oa.address_prov=#{param1}AND DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-				AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY ofw.farm_jtype, prov,mouth,`NAME` ORDER BY mouth ASC
+        oa.address_prov=#{param1} AND DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY mouth,cropName ORDER BY mouth ASC
     </select>
     <select id="getCityFertilize" resultType="java.util.Map">
-        SELECT SUM(od.dosage_weight) AS weight,
-				oa.address_city AS city,ofw.farm_jtype AS jtype FROM orchard_address oa
-				LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
-                LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-                LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-                LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-				LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-				LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        oa.address_city=#{param1} AND DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-				AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY city,ofw.farm_jtype
+        oa.address_city=#{param1} AND DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY cropName
     </select>
     <select id="getCityFertilizeByMouth" resultType="java.util.Map">
-        SELECT SUM(od.dosage_weight) AS weight,
-        DATE_FORMAT(ofw.farm_start_time,'%m') AS mouth,od.dosage_name AS `NAME`,
-        oa.address_city AS city FROM orchard_address oa
-        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
-        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
-        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
-        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
-        LEFT JOIN orchard_farm_work ofw ON og.garden_id=ofw.farm_gd_id
-        LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+        SELECT oc.crop_name AS cropName,SUM(pluck_weight) AS weight, DATE_FORMAT(opk.pluck_start_time,'%m') AS mouth
+        FROM orchard_pluck opk
+        LEFT JOIN orchard_crop oc ON opk.pluck_crop_id =oc.crop_id
+        LEFT JOIN orchard_garden og ON opk.pluck_garden_id =og.garden_id
+        LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE
         <if test="variety !=null and variety !=''">
             oc.crop_name=#{variety} and
         </if>
-        oa.address_city=#{param1} AND DATE_FORMAT(ofw.farm_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y') AND
-        oa.address_type='B' AND og.garden_approve_state='PS'AND op.plant_delete_flag=0 AND oc.dic_delete_flag=0
-        AND ofw.farm_model='人工' AND ofw.farm_delete_flag=1 AND od.dosage_status='A' AND od.dosage_type='A'
-        GROUP BY `NAME`,city,mouth ORDER BY mouth ASC
+        oa.address_city=#{param1} AND DATE_FORMAT(opk.pluck_start_time,'%Y') = DATE_FORMAT(CURDATE(),'%Y')
+        AND oa.address_type='B' AND pluck_delete_flag=0 GROUP BY mouth,cropName ORDER BY mouth ASC
     </select>
     <select id="getNationPlantPro" resultType="java.util.Map">
          SELECT SUM(od.dosage_weight) AS weight,ofw.farm_jtype AS jtype FROM orchard_address oa
@@ -223,13 +188,12 @@
         GROUP BY ofw.farm_jtype,mouth ORDER BY mouth ASC
     </select>
     <select id="getFertilizerByMouth" resultType="java.util.Map">
-        SELECT  oc.crop_name AS cropName,
-            SUM(dosage_weight) AS weight,
+        SELECT oc.crop_name AS cropName,SUM(dosage_weight) AS weight,
             date_format(od.create_time,'%m') AS time FROM  orchard_farm_work ofw
-            LEFT JOIN orchard_plant op ON ofw.farm_plant_id=op.plant_id
-            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+             LEFT JOIN orchard_crop oc ON ofw.crop_id=oc.crop_id
             LEFT JOIN orchard_garden og ON ofw.farm_gd_id=og.garden_id
-            LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+			LEFT JOIN farmwork_ref_dosage frd ON ofw.farm_id=frd.farm_work_id
+            LEFT JOIN orchard_dosage od ON frd.dosage_id=od.dosage_id
             LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE ofw.farm_type=1 and oc.crop_name
         IN
@@ -240,16 +204,16 @@
             LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id
         WHERE ow.wh_type=1 AND wh_delete_flag=1
         GROUP BY oc.crop_name ORDER BY SUM(od.dic_code) DESC
-        ) GROUP BY time,cropName LIMIT 0,3
+        ) GROUP BY time LIMIT 0,3
     </select>
     <select id="getProFertilizerByMouth" resultType="java.util.Map">
         SELECT oc.crop_name AS cropName,
             SUM(dosage_weight) AS weight,
             date_format(ofw.farm_start_time,'%m') AS time FROM  orchard_farm_work ofw
-            LEFT JOIN orchard_plant op ON ofw.farm_plant_id=op.plant_id
-            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+             LEFT JOIN orchard_crop oc ON ofw.crop_id=oc.crop_id
             LEFT JOIN orchard_garden og ON ofw.farm_gd_id=og.garden_id
-            LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+           LEFT JOIN farmwork_ref_dosage frd ON ofw.farm_id=frd.farm_work_id
+            LEFT JOIN orchard_dosage od ON frd.dosage_id=od.dosage_id
             LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE ofw.farm_type=1 and oc.crop_name
         IN
@@ -267,10 +231,10 @@
         SELECT oc.crop_name AS cropName,
             SUM(dosage_weight) AS weight,
             date_format(ofw.farm_start_time,'%m') AS time FROM  orchard_farm_work ofw
-            LEFT JOIN orchard_plant op ON ofw.farm_plant_id=op.plant_id
-            LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+            LEFT JOIN orchard_crop oc ON ofw.crop_id=oc.crop_id
             LEFT JOIN orchard_garden og ON ofw.farm_gd_id=og.garden_id
-            LEFT JOIN orchard_dosage od ON ofw.farm_id=od.farm_id
+           LEFT JOIN farmwork_ref_dosage frd ON ofw.farm_id=frd.farm_work_id
+            LEFT JOIN orchard_dosage od ON frd.dosage_id=od.dosage_id
             LEFT JOIN orchard_address oa ON og.garden_address_id=oa.address_id
         WHERE ofw.farm_type=1 and oc.crop_name
         IN

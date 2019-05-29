@@ -1,6 +1,6 @@
 package com.yf.garden.bs.dao;
 
-import com.yf.garden.bs.controller.login.model.User;
+import com.yf.garden.bs.login.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 

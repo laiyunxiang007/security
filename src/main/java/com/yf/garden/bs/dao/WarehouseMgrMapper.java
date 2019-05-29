@@ -71,28 +71,28 @@ public interface WarehouseMgrMapper {
     @Select("SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `mouth` FROM orchard_warehouse ow\n" +
             "LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id\n" +
             "LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id\n" +
-            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=0 GROUP  BY date_format(ow.wh_cret_time,'%m')\n" +
-            "AND oa.address_prov=#{param1}")
+            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=0 AND oa.address_prov=#{param1} GROUP  BY date_format" +
+            "(ow.wh_cret_time,'%m')")
     List<Map<String, Object>> getInStockByPro(String address);
 
     @Select("SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `mouth` FROM orchard_warehouse ow \n" +
             "LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id\n" +
             "LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id\n" +
-            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=1 GROUP  BY date_format" +
-            "(ow.wh_cret_time,'%m') AND oa.address_prov=#{param1}")
+            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=1 AND oa.address_prov=#{param1} GROUP  BY date_format" +
+            "(ow.wh_cret_time,'%m')")
     List<Map<String, Object>> getOutStockByPro(String address);
 
     @Select("SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `mouth` FROM orchard_warehouse ow\n" +
             "LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id\n" +
             "LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id\n" +
-            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=0 GROUP  BY date_format(ow.wh_cret_time,'%m')\n" +
-            "AND oa.address_city=#{param1}")
+            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND  ow.wh_type=0 AND oa.address_city=#{param1} GROUP  BY date_format" +
+            "(ow.wh_cret_time,'%m')")
     List<Map<String, Object>> getInStockByCity(String address);
 
     @Select("SELECT SUM(od.dic_code) AS weight,date_format(ow.wh_cret_time,'%m') AS `mouth` FROM orchard_warehouse ow \n" +
             "LEFT JOIN orchard_dictionary od ON ow.wh_package_std=od.dic_id\n" +
             "LEFT JOIN orchard_address oa ON ow.wh_addr_id=oa.address_id\n" +
-            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=1 GROUP  BY date_format" +
-            "(ow.wh_cret_time,'%m') AND oa.address_city=#{param1}")
+            "WHERE date_format(ow.wh_cret_time,'%Y')=date_format(NOW(),'%Y') AND ow.wh_type=1 AND oa.address_city=#{param1} GROUP  BY date_format" +
+            "(ow.wh_cret_time,'%m')")
     List<Map<String, Object>> getOutStockByCtiy(String address);
 }

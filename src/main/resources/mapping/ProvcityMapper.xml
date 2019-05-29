@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yf.garden.bs.dao.ProvcityMapper">
   <select id="getAllProvcity" resultType="java.util.Map">
-      SELECT prov_name AS provName, area FROM
+      SELECT prov_name AS `Name`, area FROM
          (
             SELECT prov_name FROM provcity  GROUP BY prov_name
          ) a
@@ -24,7 +24,7 @@
       ON a.prov_name=b.address_prov
   </select>
   <select id="getAllCity" resultType="HashMap">
-     SELECT prov_city_name AS cityName,IFNULL(area,0) AS area FROM
+     SELECT prov_city_name AS `Name`,IFNULL(area,0) AS area FROM
          (
             SELECT prov_city_name FROM provcity  WHERE prov_name=#{param1} GROUP BY prov_city_name
          ) a
@@ -141,6 +141,13 @@
     </select>
     <select id="getNationWideTreeAge" resultType="java.util.Map">
         SELECT SUM(op.plant_area)
+        AS area,'2年以内' AS age
+        FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
+        op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=0 AND year(NOW())-year(op.plant_date)&lt;3
+        AND oc.dic_delete_flag=0
+		union all
+        SELECT SUM(op.plant_area)
         AS area,'3-4年' AS age
         FROM orchard_plant op LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id WHERE
         op.plant_delete_flag=0 and
@@ -168,16 +175,21 @@
         year(NOW())-year(op.plant_date)&gt;=20 AND oc.dic_delete_flag=0
     </select>
     <select id="getProvTreeAge" resultType="HashMap">
-        SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'3-4年' AS age
-FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        SELECT SUM(op.plant_area) AS area,'2年以内' AS age FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=0 AND year(NOW())-year(op.plant_date)&lt;3 AND oa.address_prov=#{param1}
+        AND oc.dic_delete_flag=0
+        union all
+        SELECT SUM(op.plant_area) AS area,'3-4年' AS age FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
             LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
@@ -189,15 +201,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;3 AND year(NOW())-year(op.plant_date)&lt;5 AND oa.address_prov=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'5-8年' AS age
+        SELECT SUM(op.plant_area) AS area,'5-8年' AS age
 FROM  orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
@@ -210,15 +214,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;=5 AND year(NOW())-year(op.plant_date)&lt;9 AND oa.address_prov=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'9-20年' AS age
+        SELECT SUM(op.plant_area) AS area,'9-20年' AS age
 FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
@@ -231,15 +227,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;=9 AND year(NOW())-year(op.plant_date)&lt;20 AND oa.address_prov=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'20年以上' AS age
+        SELECT SUM(op.plant_area) AS area,'20年以上' AS age
 FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
@@ -252,16 +240,21 @@ FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_a
         year(NOW())-year(op.plant_date)&gt;=20 AND oa.address_prov=#{param1} AND oc.dic_delete_flag=0
     </select>
     <select id="getCityTreeAge" resultType="HashMap">
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'3-4年' AS age
-FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        SELECT SUM(op.plant_area) AS area,'3-4年' AS age FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
+        LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
+        LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
+        LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
+        WHERE
+        <if test="variety !=null and variety !=''">
+            oc.crop_name=#{variety} and
+        </if>
+        oa.address_type='B' AND og.garden_approve_state='PS' AND op.plant_delete_flag=0 and
+        year(NOW())-year(op.plant_date)&gt;=0 AND year(NOW())-year(op.plant_date)&lt;3 AND oa.address_city=#{param1}
+        AND oc.dic_delete_flag=0
+        union all
+        SELECT SUM(op.plant_area) AS area,'3-4年' AS age FROM orchard_address oa
+        LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
             LEFT JOIN orchard_crop oc ON op.plant_crop_id=oc.crop_id
@@ -273,15 +266,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;3 AND year(NOW())-year(op.plant_date)&lt;5 AND oa.address_city=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'5-8年' AS age
+        SELECT SUM(op.plant_area) AS area,'5-8年' AS age
 FROM  orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
@@ -294,15 +279,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;=5 AND year(NOW())-year(op.plant_date)&lt;9 AND oa.address_city=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'9-20年' AS age
+        SELECT SUM(op.plant_area) AS area,'9-20年' AS age
 FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id
@@ -315,15 +292,7 @@ WHERE
         year(NOW())-year(op.plant_date)&gt;=9 AND year(NOW())-year(op.plant_date)&lt;20 AND oa.address_city=#{param1}
         AND oc.dic_delete_flag=0
 union all
-SELECT (CASE
-        WHEN SUM(op.plant_area) &lt;1000
-        THEN CONCAT(SUM(op.plant_area),'亩')
-        WHEN SUM(op.plant_area) &gt;=1000 AND SUM(op.plant_area)&lt;10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/1000,2),'千亩')
-        WHEN SUM(op.plant_area) &gt;=10000
-        THEN CONCAT(ROUND(SUM(op.plant_area)/10000,2),'万亩')
-        END
-        ) AS area,'20年以上' AS age
+        SELECT SUM(op.plant_area) AS area,'20年以上' AS age
 FROM orchard_address oa LEFT JOIN orchard_garden og ON oa.address_id=og.garden_address_id
             LEFT JOIN orchard_ground_block ogb ON og.garden_id=ogb.gb_garden_id
             LEFT JOIN orchard_plant op ON ogb.gb_id=op.plant_gb_id

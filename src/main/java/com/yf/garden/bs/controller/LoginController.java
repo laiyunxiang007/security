@@ -1,6 +1,7 @@
 package com.yf.garden.bs.controller;
 
-import com.yf.garden.bs.controller.login.model.VerifyCode;
+import com.yf.garden.bs.login.model.VerifyCode;
+import com.yf.garden.common.dto.ResponseResult;
 import org.springframework.social.connect.web.HttpSessionSessionStrategy;
 import org.springframework.social.connect.web.SessionStrategy;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,4 +44,11 @@ public class LoginController {
         ImageIO.write(vc.getImage(), "JPEG", response.getOutputStream());
     }
 
+    @RequestMapping("/login")
+    public ResponseResult loginpage() throws Exception {
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setStatus("206");
+        responseResult.setMsg("返回登陆页面");
+        return responseResult;
+    }
 }

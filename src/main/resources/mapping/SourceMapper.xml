@@ -31,15 +31,17 @@
         as addr,
         orisech_create_time AS date,
         date_format( orisech_create_time, '%H:%i' ) AS 'time',
-        orisech_cropname AS cropName
+        orisech_cropname AS cropName,
+        concat(substring(orisech_phone,1,7),'****') AS phone
         FROM orchard_source_track
         <where>
         <if test="date !=null and date !=''">
             orisech_create_time &lt;= #{date}
         </if>
             <if test="variety !=null and variety !=''">
-                and orisech_cropname like CONCAT('%',#{variety},'%')
+                and orisech_cropname like CONCAT('%',#{variety},'%') and
             </if>
+             orisech_phone !='无法获取'
         </where>
           ORDER BY orisech_create_time DESC
     </select>

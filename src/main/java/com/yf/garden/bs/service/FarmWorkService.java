@@ -32,9 +32,9 @@ public class FarmWorkService {
             if (StringUtil.isEmpty(address) && type == 0) {
                 //全国种植面积
                 List<Map<String, String>> NationcityAreaList = provcityMapper.getAllProvcity(variety);
-                //人工施肥情况
+//                //每月采摘情况
                 List<Map<String, String>> NationcityFertilizeList = farmWorkMapper.getAllFertilize(variety);
-                //人工施肥情况每月
+                //每月采摘情况
                 List<Map<String, String>> NationcityFertilizeByMouthList = farmWorkMapper.getAllFertilizeByMouth(variety);
                 //农事植保情况
                 List<Map<String, String>> NationcityPlantProList = farmWorkMapper.getNationPlantPro(variety);
@@ -51,10 +51,10 @@ public class FarmWorkService {
             //全省
             else if (type == 1) {
                 List<Map<String, String>> CityAreaList = provcityMapper.getAllCity(address, variety);
-                //人工施肥情况
+//                //人工施肥情况
                 List<Map<String, String>> ProvFertilizeList = farmWorkMapper.getProvFertilize(address,
                         variety);
-                //人工施肥情况每月
+                //每月采摘情况
                 List<Map<String, String>> ProvFertilizeByMouthList = farmWorkMapper.getProvFertilizeByMouth(address, variety);
                 //农事植保情况
                 List<Map<String, String>> ProvPlantProList = farmWorkMapper.getProvPlantPro(address, variety);
@@ -71,10 +71,10 @@ public class FarmWorkService {
             //全市
             else if (type == 2) {
                 List<Map<String, String>> CityArea = provcityMapper.getCityArea(address, variety);
-                //人工施肥情况
+//                //人工施肥情况
                 List<Map<String, String>> CityFertilizeList = farmWorkMapper.getCityFertilize(address,
                         variety);
-                //人工施肥情况每月
+                //每月采摘情况
                 List<Map<String, String>> CityFertilizeByMouthList = farmWorkMapper.getCityFertilizeByMouth(address,
                         variety);
                 //农事植保情况
